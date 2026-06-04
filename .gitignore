@@ -1,0 +1,20 @@
+# Bytecode / cache do Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Saidas geradas pelos scripts (pesos, erros, graficos, etc.)
+results/*
+!results/.gitkeep
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Arquivos de IDE / SO
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db

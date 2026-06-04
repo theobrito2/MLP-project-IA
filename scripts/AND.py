@@ -1,22 +1,29 @@
+import os
+import sys
+
+# Bootstrap de caminhos: localiza src/ e data/ a partir da raiz do projeto.
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(RAIZ, "src"))
+DADOS = os.path.join(RAIZ, "data", "portas_logicas")
+
 from mlp import Mlp
 import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+modelo_and = Mlp(0.3, 2, 2, 1)
 
-modelo_xor = Mlp(0.1, 2, 4, 1)
-
-xor_MLP = pd.read_csv(
-    "portas logicas/problemXOR.csv",
+and_MLP = pd.read_csv(
+    os.path.join(DADOS, "problemAND.csv"),
     header=None
 )
 
 # Entradas
-X = xor_MLP.iloc[:, :-1].values.tolist()
+X = [[float(val) for val in row] for row in and_MLP.iloc[:, :-1].values.tolist()]
 
 # Saídas
-Y = xor_MLP.iloc[:, -1].values.tolist()
+Y = [float(val) for val in and_MLP.iloc[:, -1].values.tolist()]  # type: ignore
 
 for i in range(len(X)):
     for j in range(len(X[i])):
@@ -37,13 +44,13 @@ for epoca in range(10000):
     for i in indices:
 
         x = X[i]
-        y = [Y[i]]
+        y = [Y[i]]  # transforma em lista
 
-        pred = modelo_xor.feedforward(x)
+        pred = modelo_and.feedforward(x)
 
         erro_total += (y[0] - pred[0])**2
 
-        modelo_xor.backprop(x, y)
+        modelo_and.backprop(x, y)
 
     if epoca % 100 == 0:
         print(f"Época {epoca} | Erro: {erro_total:.4f}")
@@ -54,7 +61,7 @@ acertos = 0
 
 for i in range(len(X)):
 
-    pred = modelo_xor.feedforward(X[i])
+    pred = modelo_and.feedforward(X[i])
 
     saida = pred[0]
 
@@ -71,4 +78,4 @@ for i in range(len(X)):
     if previsto == real:
         acertos += 1
 
-print(f"Acurácia: {acertos}/{len(X)}")
+print(f"Acurácia: {acertos}/{len(X)}")   

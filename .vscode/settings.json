@@ -1,0 +1,9 @@
+{
+  // Informa ao Pylance que os modulos importados (mlp, sigmoid_neuron)
+  // estao na pasta src/. Resolve o aviso "Import could not be resolved"
+  // sem alterar o comportamento em tempo de execucao (que ja usa o
+  // bootstrap de sys.path no topo de cada script).
+  "python.analysis.extraPaths": [
+    "./src"
+  ]
+}

@@ -2,9 +2,16 @@ import random
 import math
 
 class SigmoidNeuron:
+    # Hiperparametros de INICIALIZACAO dos pesos (faixa da distribuicao
+    # uniforme usada para sortear pesos e bias). Ficam como atributos de
+    # classe para poderem ser registrados no arquivo de hiperparametros.
+    PESO_MIN = -0.5
+    PESO_MAX = 0.5
+    NOME_ATIVACAO = "Sigmoide (logistica)"
+
     def __init__(self, num_entradas):
-        self.w = [random.uniform(-0.5, 0.5) for _ in range(num_entradas)]
-        self.b = random.uniform(-0.5, 0.5)
+        self.w = [random.uniform(self.PESO_MIN, self.PESO_MAX) for _ in range(num_entradas)]
+        self.b = random.uniform(self.PESO_MIN, self.PESO_MAX)
 
         self.entrada = []
         self.zin = 0
