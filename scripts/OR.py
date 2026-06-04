@@ -13,9 +13,7 @@ DADOS = os.path.join(RAIZ, "data", "portas_logicas")
 
 from mlp import Mlp
 import random
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 modelo_or = Mlp(0.3, 2, 2, 1)
 
@@ -39,6 +37,21 @@ for i in range(len(X)):
     if Y[i] == -1:
         Y[i] = 0
 
+print("=" * 48)
+print(" MLP - Porta logica OR")
+print("=" * 48)
+print("Arquitetura: 2 entradas -> 2 ocultos -> 1 saida | lr=0.3\n")
+
+# Parada antecipada: como o conjunto e minimo (4 exemplos, sem validacao),
+# monitora-se o MSE de treino e guarda-se o melhor modelo para restaura-lo.
+PACIENCIA = 200
+TOLERANCIA = 1e-4
+melhor_erro = float('inf')
+melhor_pesos = modelo_or.copiar_pesos()
+epocas_sem_melhora = 0
+epoca = 0
+
+print("--- Treinamento (MSE por epoca) ---")
 for epoca in range(10000):
 
     indices = list(range(len(X)))
@@ -57,30 +70,40 @@ for epoca in range(10000):
 
         modelo_or.backprop(x, y)
 
-    if epoca % 100 == 0:
-        print(f"Época {epoca} | Erro: {erro_total:.4f}")
+    mse = erro_total / len(X)
 
-print("\nTESTES:\n")
+    if mse < melhor_erro - TOLERANCIA:
+        melhor_erro = mse
+        melhor_pesos = modelo_or.copiar_pesos()
+        epocas_sem_melhora = 0
+    else:
+        epocas_sem_melhora += 1
+
+    if epoca % 1000 == 0:
+        print(f"  Epoca {epoca:5d} | MSE: {mse:.5f} | Sem melhora: {epocas_sem_melhora}")
+
+    if epocas_sem_melhora >= PACIENCIA:
+        print(f"  Parada antecipada na epoca {epoca} (sem melhora ha {PACIENCIA} epocas).")
+        break
+
+modelo_or.restaurar_pesos(melhor_pesos)
+print(f"  Treino concluido em {epoca + 1} epocas | MSE final: {melhor_erro:.5f}")
+
+print("\n--- Teste ---")
+print(f"  {'Entrada':<10} {'Esperado':>8} {'Previsto':>9} {'Saida':>8}   Resultado")
 
 acertos = 0
 
 for i in range(len(X)):
 
     pred = modelo_or.feedforward(X[i])
-
     saida = pred[0]
-
     previsto = 1 if saida >= 0.5 else 0
+    real = int(Y[i])
+    ok = previsto == real
+    acertos += ok
 
-    real = Y[i]
+    entrada = "[" + ", ".join(str(int(v)) for v in X[i]) + "]"
+    print(f"  {entrada:<10} {real:>8} {previsto:>9} {saida:>8.4f}   {'OK' if ok else 'ERRO'}")
 
-    print(f"Entrada: {X[i]}")
-    print(f"Esperado: {real}")
-    print(f"Previsto: {previsto}")
-    print(f"Valor bruto: {saida:.4f}")
-    print()
-
-    if previsto == real:
-        acertos += 1
-
-print(f"Acurácia: {acertos}/{len(X)}")
+print(f"\nAcuracia: {acertos}/{len(X)} ({100 * acertos / len(X):.1f}%)")

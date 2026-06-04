@@ -15,12 +15,12 @@ antecipada** baseada no erro de validação.
 ```
 MLP-project-IA/
 ├── src/                       # Código-fonte da rede (reutilizável)
-│   ├── mlp.py                 # Classe Mlp: feedforward, backprop, persistência
-│   └── sigmoid_neuron.py      # Classe SigmoidNeuron: ativação e derivada
+│   └── mlp.py                 # Classe Mlp: feedforward, backprop, persistência (vetorizada)
 │
 ├── scripts/                   # Experimentos executáveis (um por conjunto de dados)
 │   ├── main.py                # Experimento principal (CARACTERES COMPLETO: treino/teste + artefatos)
 │   ├── caracteres_fausett.py  # Teste de corretude — caracteres da Fausett (limpo/ruído)
+│   ├── teste_de_mesa.py       # Conferência da implementação com o material de apoio (exemplo numérico)
 │   ├── AND.py                 # Teste de corretude — porta lógica AND
 │   ├── OR.py                  # Teste de corretude — porta lógica OR
 │   └── XOR.py                 # Teste de corretude — porta lógica XOR
@@ -55,6 +55,9 @@ python scripts/XOR.py
 
 # Teste de corretude (caracteres da Fausett — treino limpo, teste com ruído):
 python scripts/caracteres_fausett.py
+
+# Teste de mesa (confere os cálculos com o material de apoio):
+python scripts/teste_de_mesa.py
 ```
 
 ## Artefatos gerados

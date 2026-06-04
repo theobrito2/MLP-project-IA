@@ -104,11 +104,20 @@ def avaliar(modelo, X_dados, Y_dados, nome):
 # (backpropagation), minimizando o MSE.
 modelo = Mlp(TAXA_APRENDIZADO, NUM_ENTRADAS, NUM_OCULTOS, NUM_SAIDAS)
 
-print("=== TREINAMENTO (caracteres limpos) ===")
+print("=" * 56)
+print(" MLP - Caracteres da Fausett (teste de corretude)")
+print("=" * 56)
+print(f"Arquitetura: {NUM_ENTRADAS} entradas -> {NUM_OCULTOS} ocultos -> "
+      f"{NUM_SAIDAS} saidas | lr={TAXA_APRENDIZADO}")
+print(f"Treino: {len(X_train)} caracteres limpos\n")
+
+print("--- Treinamento (MSE por epoca) ---")
 
 melhor_erro = float('inf')
+melhor_pesos = modelo.copiar_pesos()
 epocas_sem_melhora = 0
 historico = []
+epoca = 0
 
 for epoca in range(MAX_EPOCAS):
 
@@ -128,31 +137,36 @@ for epoca in range(MAX_EPOCAS):
     mse = erro_total / len(X_train)
     historico.append(mse)
 
-    # Parada antecipada sobre o MSE de treino (conjunto pequeno, sem validacao).
+    # Parada antecipada sobre o MSE de treino (conjunto pequeno, sem validacao),
+    # guardando os melhores pesos para restaura-los ao final.
     if mse < melhor_erro - TOLERANCIA:
         melhor_erro = mse
+        melhor_pesos = modelo.copiar_pesos()
         epocas_sem_melhora = 0
     else:
         epocas_sem_melhora += 1
 
     if epoca % 200 == 0:
-        print(f"Epoca {epoca} | MSE: {mse:.5f} | Sem melhora: {epocas_sem_melhora}")
+        print(f"  Epoca {epoca:5d} | MSE: {mse:.5f} | Sem melhora: {epocas_sem_melhora}")
 
     if epocas_sem_melhora >= PACIENCIA:
-        print(f"\nParada antecipada acionada na epoca {epoca} "
+        print(f"  Parada antecipada na epoca {epoca} "
               f"(MSE estagnado por {PACIENCIA} epocas).")
         break
+
+modelo.restaurar_pesos(melhor_pesos)
+print(f"  Treino concluido em {epoca + 1} epocas | MSE final: {melhor_erro:.5f}")
 
 # ==========================================
 # TESTES (corretude + robustez a ruido)
 # ==========================================
-print("\n=== TESTES ===")
+print("\n--- Teste (acuracia por conjunto) ---")
 avaliar(modelo, X_train, Y_train, "Limpo (=treino)")
 avaliar(modelo, X_ruido, Y_ruido, "Com ruido")
 avaliar(modelo, X_ruido20, Y_ruido20, "Com ruido 20%")
 
 # Detalhamento por exemplo no conjunto com ruido (mostra a discretizacao).
-print("\n=== DETALHE (conjunto com ruido) ===")
+print("\n--- Detalhe (conjunto com ruido) ---")
 for i in range(len(X_ruido)):
     pred = modelo.feedforward(X_ruido[i])
     p = prever_classe(pred)

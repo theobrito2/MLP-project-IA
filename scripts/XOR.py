@@ -13,9 +13,7 @@ DADOS = os.path.join(RAIZ, "data", "portas_logicas")
 
 from mlp import Mlp
 import random
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 # XOR nao e linearmente separavel e tem um longo plato inicial de erro,
@@ -43,10 +41,18 @@ for i in range(len(X)):
         Y[i] = 0
 
 paciencia = 200   # generosa: evita parar durante o plato inicial do XOR
-melhor_erro = float('inf')
-epocas_sem_melhora = 0
 tolerancia = 1e-4
+melhor_erro = float('inf')
+melhor_pesos = modelo_xor.copiar_pesos()
+epocas_sem_melhora = 0
+epoca = 0
 
+print("=" * 48)
+print(" MLP - Porta logica XOR")
+print("=" * 48)
+print("Arquitetura: 2 entradas -> 4 ocultos -> 1 saida | lr=0.5\n")
+
+print("--- Treinamento (MSE por epoca) ---")
 for epoca in range(10000):
 
     indices = list(range(len(X)))
@@ -64,45 +70,43 @@ for epoca in range(10000):
         erro_total += (y[0] - pred[0])**2
 
         modelo_xor.backprop(x, y)
-        
-    mse = erro_total / len(X) # Erro quadrático médio
 
-    # Lógica do Early Stopping
+    mse = erro_total / len(X)  # Erro quadratico medio
+
+    # Parada antecipada com restauracao dos melhores pesos
     if mse < melhor_erro - tolerancia:
         melhor_erro = mse
+        melhor_pesos = modelo_xor.copiar_pesos()
         epocas_sem_melhora = 0
     else:
         epocas_sem_melhora += 1
 
-    if epoca % 100 == 0:
-        print(f"Época {epoca} | MSE: {mse:.4f} | Sem melhora: {epocas_sem_melhora}")
+    if epoca % 500 == 0:
+        print(f"  Epoca {epoca:5d} | MSE: {mse:.5f} | Sem melhora: {epocas_sem_melhora}")
 
     if epocas_sem_melhora >= paciencia:
-        print(f"\nParada antecipada (Early Stopping) acionada na época {epoca}!")
-        print(f"O erro não teve melhoras significativas nas últimas {paciencia} épocas.")
+        print(f"  Parada antecipada na epoca {epoca} "
+              f"(sem melhora ha {paciencia} epocas).")
         break
 
-print("\nTESTES:\n")
+modelo_xor.restaurar_pesos(melhor_pesos)
+print(f"  Treino concluido em {epoca + 1} epocas | MSE final: {melhor_erro:.5f}")
+
+print("\n--- Teste ---")
+print(f"  {'Entrada':<10} {'Esperado':>8} {'Previsto':>9} {'Saida':>8}   Resultado")
 
 acertos = 0
 
 for i in range(len(X)):
 
     pred = modelo_xor.feedforward(X[i])
-
     saida = pred[0]
-
     previsto = 1 if saida >= 0.5 else 0
+    real = int(Y[i])
+    ok = previsto == real
+    acertos += ok
 
-    real = Y[i]
+    entrada = "[" + ", ".join(str(int(v)) for v in X[i]) + "]"
+    print(f"  {entrada:<10} {real:>8} {previsto:>9} {saida:>8.4f}   {'OK' if ok else 'ERRO'}")
 
-    print(f"Entrada: {X[i]}")
-    print(f"Esperado: {real}")
-    print(f"Previsto: {previsto}")
-    print(f"Valor bruto: {saida:.4f}")
-    print()
-
-    if previsto == real:
-        acertos += 1
-
-print(f"Acurácia: {acertos}/{len(X)}")
+print(f"\nAcuracia: {acertos}/{len(X)} ({100 * acertos / len(X):.1f}%)")

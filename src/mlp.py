@@ -61,6 +61,14 @@ class Mlp:
         self.W1 += self.lr * np.outer(delta_oculto, x)
         self.b1 += self.lr * delta_oculto
 
+    def copiar_pesos(self):
+        # Snapshot dos pesos (usado na parada antecipada para guardar o
+        # melhor modelo e restaura-lo ao final do treino).
+        return (self.W1.copy(), self.b1.copy(), self.W2.copy(), self.b2.copy())
+
+    def restaurar_pesos(self, snapshot):
+        self.W1, self.b1, self.W2, self.b2 = (p.copy() for p in snapshot)
+
     def salvar_pesos(self, nome_arquivo):
         with open(nome_arquivo, "w") as f:
 

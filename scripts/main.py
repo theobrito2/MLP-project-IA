@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 # Reprodutibilidade e criterio de parada antecipada.
 SEED = 42
 MAX_EPOCAS = 1000
-PACIENCIA = 20
+PACIENCIA = 30
 TOLERANCIA = 1e-4
 
 random.seed(SEED)
@@ -112,11 +112,13 @@ def treinar(modelo, X_tr, Y_tr, X_vl, Y_vl,
             max_epocas=1000, paciencia=20, tolerancia=1e-4, verbose=True):
     # Treino por Gradiente Descendente com Backpropagation, minimizando o MSE.
     # Parada antecipada: monitora o MSE de validacao; se nao melhora por
-    # "paciencia" epocas, interrompe o treino.
+    # "paciencia" epocas, interrompe o treino e restaura os pesos da melhor
+    # epoca (evita ficar com um modelo ja levemente sobreajustado).
     historico_treino = []
     historico_val = []
 
     melhor_erro = float('inf')
+    melhor_pesos = modelo.copiar_pesos()
     epocas_sem_melhora = 0
 
     for epoca in range(max_epocas):
@@ -141,9 +143,11 @@ def treinar(modelo, X_tr, Y_tr, X_vl, Y_vl,
         historico_treino.append(mse_treino)
         historico_val.append(mse_val)
 
-        # Parada antecipada (sobre o MSE de validacao)
+        # Parada antecipada (sobre o MSE de validacao): guarda os melhores
+        # pesos a cada nova melhora e conta as epocas sem melhora.
         if mse_val < melhor_erro - tolerancia:
             melhor_erro = mse_val
+            melhor_pesos = modelo.copiar_pesos()
             epocas_sem_melhora = 0
         else:
             epocas_sem_melhora += 1
@@ -156,6 +160,9 @@ def treinar(modelo, X_tr, Y_tr, X_vl, Y_vl,
             if verbose:
                 print(f"\nParada antecipada acionada na epoca {epoca}!")
             break
+
+    # Restaura os pesos da melhor epoca de validacao.
+    modelo.restaurar_pesos(melhor_pesos)
 
     return historico_treino, historico_val
 
@@ -171,16 +178,21 @@ def adicionar_ruido(x, taxa_ruido=0.1):
 # ==========================================
 # BUSCA DE PARAMETROS (GRID SEARCH)
 # ==========================================
-# Testa combinacoes de (taxa de aprendizado x neuronios ocultos) com poucas
-# epocas e escolhe a melhor pela acuracia na validacao.
-# EXECUTAR_BUSCA = False pula a busca e usa os valores padrao.
+# Testa combinacoes de (taxa de aprendizado x neuronios ocultos) e escolhe a
+# melhor pela MSE de validacao. EXECUTAR_BUSCA = False pula a busca.
 EXECUTAR_BUSCA = True
+
+# Epocas/paciencia da busca: o bastante para cada candidata convergir.
+BUSCA_MAX_EPOCAS = 100
+BUSCA_PACIENCIA = 15
 
 def busca_parametros():
     taxas_teste = [0.05, 0.1]
     ocultos_teste = [32, 64]
 
-    melhor = (-1.0, taxas_teste[0], ocultos_teste[0])
+    # Seleciona pela MENOR MSE de validacao (metrica continua, sem empates).
+    # A acuracia e exibida apenas como informacao.
+    melhor = (float('inf'), taxas_teste[0], ocultos_teste[0])
 
     print("\n=== BUSCA DE PARAMETROS (GRID SEARCH) ===")
     for lr in taxas_teste:
@@ -188,17 +200,25 @@ def busca_parametros():
             modelo_teste = Mlp(lr, 120, n_ocultos, 26)
             treinar(
                 modelo_teste, X_train, Y_train, X_val, Y_val,
-                max_epocas=25, paciencia=8, verbose=False
+                max_epocas=BUSCA_MAX_EPOCAS, paciencia=BUSCA_PACIENCIA, verbose=False
             )
+            mse_val = erro_medio(modelo_teste, X_val, Y_val)
             ac = acuracia(modelo_teste, X_val, Y_val)
-            print(f"lr={lr} | ocultos={n_ocultos} | acuracia val={ac:.3f}")
+            print(f"lr={lr} | ocultos={n_ocultos} | MSE val={mse_val:.4f} | acuracia val={ac:.3f}")
 
-            if ac > melhor[0]:
-                melhor = (ac, lr, n_ocultos)
+            if mse_val < melhor[0]:
+                melhor = (mse_val, lr, n_ocultos)
 
     print(f"Melhor configuracao: lr={melhor[1]} | "
-          f"ocultos={melhor[2]} | acuracia val={melhor[0]:.3f}\n")
+          f"ocultos={melhor[2]} | MSE val={melhor[0]:.4f}\n")
     return melhor[1], melhor[2]
+
+print("=" * 60)
+print(" MLP - CARACTERES COMPLETO (treino / validacao / teste)")
+print("=" * 60)
+print(f"Exemplos: {len(X_train)} treino | {len(X_val)} validacao | "
+      f"{len(X_test)} teste")
+print(f"Arquitetura: 120 entradas -> [ocultos] -> 26 saidas (uma letra A-Z)")
 
 if EXECUTAR_BUSCA:
     melhor_lr, melhor_ocultos = busca_parametros()
@@ -208,6 +228,7 @@ else:
 # ==========================================
 # MODELO FINAL
 # ==========================================
+print(f"\n--- Treinamento final (lr={melhor_lr}, ocultos={melhor_ocultos}) ---")
 modelo = Mlp(melhor_lr, 120, melhor_ocultos, 26)
 
 # Salva hiperparametros e pesos iniciais.
@@ -247,6 +268,7 @@ plt.savefig(os.path.join(RESULTADOS, "grafico_erro.png"))
 # ==========================================
 # TESTE (com ruido) + MATRIZ DE CONFUSAO
 # ==========================================
+print("\n--- Teste (conjunto de teste com 5% de ruido) ---")
 acertos = 0
 matriz_confusao = np.zeros((26, 26), dtype=int)
 
@@ -272,7 +294,7 @@ with open(os.path.join(RESULTADOS, "saidas_teste.txt"), "w") as f:
         f.write(f"Previsto: {letra_pred}\n")
         f.write(f"Saida bruta: {pred}\n\n")
 
-print(f"\nAcuracia (teste com ruido): {acertos}/{len(X_test)} "
+print(f"Acuracia: {acertos}/{len(X_test)} "
       f"({100 * acertos / len(X_test):.1f}%)")
 
 # Pesos finais.
@@ -280,6 +302,16 @@ modelo.salvar_pesos(os.path.join(RESULTADOS, "pesos_finais.txt"))
 
 # Matriz de confusao (texto e imagem).
 letras = [chr(c) for c in range(ord('A'), ord('Z') + 1)]
+
+# Maiores confusoes (real != previsto) para discussao dos resultados.
+confusoes = [(matriz_confusao[i][j], letras[i], letras[j])
+             for i in range(26) for j in range(26)
+             if i != j and matriz_confusao[i][j] > 0]
+confusoes.sort(reverse=True)
+if confusoes:
+    print("\nMaiores confusoes (real -> previsto):")
+    for qtd, real, prev in confusoes[:5]:
+        print(f"  {real} -> {prev}: {qtd}x")
 
 with open(os.path.join(RESULTADOS, "matriz_confusao.txt"), "w") as f:
     f.write("Matriz de Confusao (linha = real, coluna = previsto)\n\n")
@@ -297,6 +329,10 @@ plt.xlabel("Letra prevista")
 plt.ylabel("Letra real")
 plt.title("Matriz de Confusao - Conjunto de Teste")
 plt.savefig(os.path.join(RESULTADOS, "matriz_confusao.png"))
+
+print(f"\nArtefatos salvos em: {RESULTADOS}")
+print("  hiperparametros.txt | pesos_iniciais.txt | pesos_finais.txt")
+print("  erro_epocas.txt | saidas_teste.txt | matriz_confusao.txt/.png | grafico_erro.png")
 
 # Visualizacao de um caractere de exemplo.
 plt.figure()
