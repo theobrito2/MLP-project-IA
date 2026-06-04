@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(RAIZ, "src"))
 DADOS = os.path.join(RAIZ, "data", "portas_logicas")
 
 from mlp import Mlp
+from metricas import avaliar_binario
 import random
 import pandas as pd
 
@@ -95,7 +96,8 @@ print(f"  Treino concluido em {epoca + 1} epocas | MSE final: {melhor_erro:.5f}"
 print("\n--- Teste ---")
 print(f"  {'Entrada':<10} {'Esperado':>8} {'Previsto':>9} {'Saida':>8}   Resultado")
 
-acertos = 0
+reais = []
+previstos = []
 
 for i in range(len(X)):
 
@@ -103,10 +105,11 @@ for i in range(len(X)):
     saida = pred[0]
     previsto = 1 if saida >= 0.5 else 0
     real = int(Y[i])
-    ok = previsto == real
-    acertos += ok
+    reais.append(real)
+    previstos.append(previsto)
 
     entrada = "[" + ", ".join(str(int(v)) for v in X[i]) + "]"
-    print(f"  {entrada:<10} {real:>8} {previsto:>9} {saida:>8.4f}   {'OK' if ok else 'ERRO'}")
+    print(f"  {entrada:<10} {real:>8} {previsto:>9} {saida:>8.4f}   {'OK' if previsto == real else 'ERRO'}")
 
-print(f"\nAcuracia: {acertos}/{len(X)} ({100 * acertos / len(X):.1f}%)")
+print("\n--- Avaliacao (classificacao binaria) ---")
+avaliar_binario(reais, previstos)
