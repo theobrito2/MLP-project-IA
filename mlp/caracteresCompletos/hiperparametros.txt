@@ -1,0 +1,6 @@
+Taxa de aprendizado: 0.05
+num_entradas = 120
+num_ocultos = 64
+num_saidas = 26
+Épocas: 1000
+Função de ativação: Sigmoid
