@@ -1,10 +1,14 @@
+# Trabalho de IA - Multilayer Perceptron (MLP)
+# Integrantes:
+#   - Theo Djrdjrjan Brito - No USP: 13688367
+#   - Nome Completo - No USP: 00000000
+
 import random
 import math
 
+# Neuronio sigmoide (referencia conceitual de um unico neuronio).
+# A MLP em mlp.py implementa essa mesma logica em forma vetorizada.
 class SigmoidNeuron:
-    # Hiperparametros de INICIALIZACAO dos pesos (faixa da distribuicao
-    # uniforme usada para sortear pesos e bias). Ficam como atributos de
-    # classe para poderem ser registrados no arquivo de hiperparametros.
     PESO_MIN = -0.5
     PESO_MAX = 0.5
     NOME_ATIVACAO = "Sigmoide (logistica)"
@@ -20,8 +24,7 @@ class SigmoidNeuron:
     def ativacao(self, x):
         return 1 / (1 + math.exp(-x))
 
-    # Aqui é calculado o valor da DERIVADA DA FUNÇÃO SIGMOID
-    # SIG(X)' = SIG(X)(1-SIG(x)) 
+    # Derivada da sigmoide: sig'(x) = sig(x) * (1 - sig(x))
     def derivada(self):
         return self.saida * (1 - self.saida)
 

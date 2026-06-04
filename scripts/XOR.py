@@ -1,3 +1,8 @@
+# Trabalho de IA - Multilayer Perceptron (MLP) - Porta logica XOR
+# Integrantes:
+#   - Theo Djrdjrjan Brito - No USP: 13688367
+#   - Nome Completo - No USP: 00000000
+
 import os
 import sys
 
@@ -13,7 +18,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-modelo_xor = Mlp(0.1, 2, 4, 1)
+# XOR nao e linearmente separavel e tem um longo plato inicial de erro,
+# por isso lr maior (0.5) e paciencia generosa na parada antecipada.
+modelo_xor = Mlp(0.5, 2, 4, 1)
 
 xor_MLP = pd.read_csv(
     os.path.join(DADOS, "problemXOR.csv"),
@@ -35,7 +42,7 @@ for i in range(len(X)):
     if Y[i] == -1:
         Y[i] = 0
 
-paciencia = 20
+paciencia = 200   # generosa: evita parar durante o plato inicial do XOR
 melhor_erro = float('inf')
 epocas_sem_melhora = 0
 tolerancia = 1e-4

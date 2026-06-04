@@ -1,3 +1,8 @@
+# Trabalho de IA - Multilayer Perceptron (MLP) - Porta logica AND
+# Integrantes:
+#   - Theo Djrdjrjan Brito - No USP: 13688367
+#   - Nome Completo - No USP: 00000000
+
 import os
 import sys
 

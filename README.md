@@ -20,6 +20,7 @@ MLP-project-IA/
 │
 ├── scripts/                   # Experimentos executáveis (um por conjunto de dados)
 │   ├── main.py                # Experimento principal (CARACTERES COMPLETO: treino/teste + artefatos)
+│   ├── caracteres_fausett.py  # Teste de corretude — caracteres da Fausett (limpo/ruído)
 │   ├── AND.py                 # Teste de corretude — porta lógica AND
 │   ├── OR.py                  # Teste de corretude — porta lógica OR
 │   └── XOR.py                 # Teste de corretude — porta lógica XOR
@@ -51,6 +52,9 @@ python scripts/main.py
 python scripts/AND.py
 python scripts/OR.py
 python scripts/XOR.py
+
+# Teste de corretude (caracteres da Fausett — treino limpo, teste com ruído):
+python scripts/caracteres_fausett.py
 ```
 
 ## Artefatos gerados
@@ -71,7 +75,7 @@ O `scripts/main.py` grava em `results/caracteres_completo/`:
 
 - **CARACTERES COMPLETO** é o conjunto usado para treino/teste do trabalho.
 - **Portas lógicas** e **CARACTERES (Fausett)** servem apenas como teste rápido de
-  corretude da implementação. Os dados da Fausett estão em `data/caracteres_fausett/`,
-  mas ainda não há script dedicado a eles.
+  corretude da implementação. O script `scripts/caracteres_fausett.py` treina nos
+  caracteres limpos e testa nas versões com ruído (`data/caracteres_fausett/`).
 - A busca de parâmetros (grid search) pode ser desligada em
   `scripts/main.py` via `EXECUTAR_BUSCA = False`.
